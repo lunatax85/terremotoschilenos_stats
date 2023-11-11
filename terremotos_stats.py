@@ -8,6 +8,8 @@ def leer_datos_sismos(nombre_archivo):
     return [linea.strip().split(',') for linea in datos]
 
 
+
+
 def sismo_mayor_magnitud(datos_sismos):
     mayor_magnitud = max(datos_sismos, key=lambda x: float(x[4]))
     return mayor_magnitud[0], mayor_magnitud[1]
