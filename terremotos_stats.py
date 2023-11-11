@@ -40,8 +40,11 @@ def graficar_sismos_por_siglo(siglos):
     plt.tight_layout()
     plt.show()
 
+    
+
 if __name__ == '__main__':
     datos_sismos = leer_datos_sismos('C:/DESARROLLO/terremotoschilenos_stats/sismos.txt')
+
 
 
     fecha_hora_mayor_sismo = sismo_mayor_magnitud(datos_sismos)
