@@ -8,11 +8,8 @@ def leer_datos_sismos(nombre_archivo):
     return [linea.strip().split(',') for linea in datos]
 
 
-<<<<<<< HEAD
 
 
-=======
->>>>>>> 4ade0620d7d3c7bdf7402e3ac47619c49baf0c3e
 def sismo_mayor_magnitud(datos_sismos):
     mayor_magnitud = max(datos_sismos, key=lambda x: float(x[4]))
     return mayor_magnitud[0], mayor_magnitud[1]
@@ -45,11 +42,6 @@ def graficar_sismos_por_siglo(siglos):
     plt.tight_layout()
     plt.show()
 
-<<<<<<< HEAD
-=======
-    
-
->>>>>>> 4ade0620d7d3c7bdf7402e3ac47619c49baf0c3e
 if __name__ == '__main__':
     datos_sismos = leer_datos_sismos('C:/DESARROLLO/terremotoschilenos_stats/sismos.txt')
 
