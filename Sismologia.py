@@ -5,12 +5,20 @@ from collections import Counter
 
 
 def leer_datos_sismos(nombre_archivo):
-    with open(nombre_archivo, 'r') as archivo:
-        datos = archivo.readlines()
-    return [linea.strip().split(',') for linea in datos]
+    archivo = open(nombre_archivo)
+    datos = []
+    for linea in archivo:
+        linea = linea.rstrip('\n')
+        lista = linea.split(',')
+        datos.append(lista)
+    archivo.close()
+    return datos
+
+def obtener_magnitud(sismo):
+    return float(sismo[4])
 
 def sismo_mayor_magnitud(datos_sismos):
-    mayor_magnitud = max(datos_sismos, key=lambda x: float(x[4]))
+    mayor_magnitud = max(datos_sismos, key=obtener_magnitud)
     return mayor_magnitud[0], mayor_magnitud[1]
 
 def contar_sismos_rango_magnitud(datos_sismos, min_magnitud, max_magnitud):
@@ -24,19 +32,35 @@ def sismos_por_siglo(datos_sismos):
             siglos[siglo] += 1
     return siglos
 
-def graficar_sismos_por_siglo(siglos):
+def graficar_sismos_por_siglo(siglos, datos_sismos, estadisticas):
+    fecha_hora_mayor_sismo, sismos_7_8, sismos_8_9, sismos_mayor_9 = estadisticas
+
+    plt.figure(figsize=(12, 8))
+    ax = plt.subplot(121) 
+
     siglos_ordenados = sorted(siglos.items())
     siglos = [f'Siglo {siglo}' for siglo, _ in siglos_ordenados]
     conteos = [conteo for _, conteo in siglos_ordenados]
+
+    ax.bar(siglos, conteos, color='skyblue')
+    ax.set_title('Cantidad de Sismos por Siglo')
+    ax.set_xlabel('Siglo')
+    ax.set_ylabel('Cantidad de Sismos')
+    ax.set_xticks(siglos)
+    ax.set_xticklabels(siglos, rotation=45)
     
-    plt.figure(figsize=(10, 6))
-    plt.bar(siglos, conteos, color='skyblue')
-    plt.title('Cantidad de Sismos por Siglo')
-    plt.xlabel('Siglo')
-    plt.ylabel('Cantidad de Sismos')
-    plt.xticks(rotation=45)
+
+    texto_estadisticas = (
+        f"Fecha: {fecha_hora_mayor_sismo[0]} y hora: {fecha_hora_mayor_sismo[1]} del mayor sismo registrado.\n"
+        f"Cantidad de sismos >= 7.0 y < 8.0: {sismos_7_8}\n"
+        f"Cantidad de sismos >= 8.0 y < 9.0: {sismos_8_9}\n"
+        f"Cantidad de sismos >= 9.0: {sismos_mayor_9}"
+    )
+    plt.figtext(0.5, 0.5, texto_estadisticas, ha="center", va="center", fontsize=12, bbox={"facecolor": "white", "alpha": 0.5, "pad": 5})
+
     plt.tight_layout()
     plt.show()
+
 
 def graficar_sismos_3d(siglos):
     fig = plt.figure(figsize=(12, 8))
@@ -47,21 +71,22 @@ def graficar_sismos_3d(siglos):
     magnitudes = [float(magnitud) for _, magnitud in siglos_ordenados]
     conteos = [conteo for _, conteo in siglos_ordenados]
 
-    # Coordenadas x, y, y z de las barras
+    umbral_magnitud_alta = 7.5
+    colores = ['red' if magnitud > umbral_magnitud_alta else 'skyblue' for magnitud in magnitudes]
+
+    
     x = [i for i in range(len(siglos))]
     y = magnitudes
-    z = np.zeros_like(x)  # Posición en el eje z (todos en el mismo plano)
-
-    # Dimensiones de las barras
+    z = np.zeros_like(x)
     dx = dy = 0.8
     dz = conteos
 
-    ax.bar3d(x, y, z, dx, dy, dz, shade=True)
+    for i in range(len(siglos)):
+        ax.bar3d(x[i], y[i], z[i], dx, dy, dz[i], color=colores[i], shade=True)
 
-    # Ajustar etiquetas del eje x para reflejar los siglos
+   
     ax.set_xticks(x)
     ax.set_xticklabels(siglos)
-
     ax.set_xlabel('Siglo')
     ax.set_ylabel('Magnitud del Sismo')
     ax.set_zlabel('Cantidad de Sismos')
@@ -87,14 +112,15 @@ def mostrar_resultados(resultados):
     print(f"Cantidad de sismos >= 8.0 y < 9.0: {sismos_8_9}")
     print(f"Cantidad de sismos >= 9.0: {sismos_mayor_9}")
 
-    # Imprimir la cantidad de sismos por siglo
+    
     for siglo in range(16, 22):
         print(f"Cantidad de sismos siglo {siglo}: {siglos_sismos.get(siglo, 0)}")
 
-    # Graficar los sismos por siglo en 3D
+    
     graficar_sismos_3d(siglos_sismos)
 
 if __name__ == '__main__':
+
     datos_sismos = leer_datos_sismos('C:/DESARROLLO/terremotoschilenos_stats/sismos.txt')
     resultados = calcular_estadisticas(datos_sismos)
     mostrar_resultados(resultados)
