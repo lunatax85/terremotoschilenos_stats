@@ -41,14 +41,7 @@ def graficar_sismos_por_siglo(siglos):
     plt.show()
 
 def graficar_sismos_3d(siglos):
-    fig = plt.figure(figsize=(12, 8))
-    img = plt.imread('C:/desarrollo/terremotoschilenos_stats/fondo.png')
-    fig.figimage(img, resize=True, alpha=0.5, zorder=1)
-    ax = fig.add_subplot(111, projection='3d', zorder=2)
     
-
-
-
     fig = plt.figure(figsize=(12, 8))
     ax = fig.add_subplot(111, projection='3d')
 

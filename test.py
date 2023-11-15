@@ -1,37 +1,65 @@
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-import numpy as np
-from collections import Counter
-
-# Función para leer los datos del archivo de sismos
 def leer_datos_sismos(nombre_archivo):
-    with open(nombre_archivo, 'r') as archivo:
-        datos = archivo.readlines()
-    return [linea.strip().split(',') for linea in datos]
+    archivo = open(nombre_archivo)
+    datos = []
+    for linea in archivo:
+        linea = linea.rstrip('\n')
+        lista = linea.split(',')
+        datos.append(lista)
+    archivo.close()
+    return datos
 
-# Función para encontrar el sismo de mayor magnitud
-def sismo_mayor_magnitud(datos_sismos):
-    mayor_magnitud = max(datos_sismos, key=lambda x: float(x[4]))
-    return mayor_magnitud[0], mayor_magnitud[1]
+def encontrar_mayor_sismo(datos):
+    mayor_magnitud = 0
+    fecha_hora_mayor = ""
 
-# Función para contar sismos en un rango de magnitud
-def contar_sismos_rango_magnitud(datos_sismos, min_magnitud, max_magnitud):
-    return sum(min_magnitud <= float(sismo[4]) < max_magnitud for sismo in datos_sismos if sismo[4] not in ['-', ''])
+    for dato in datos:
+        magnitud_str = dato[4]
+        if magnitud_str != '-':
+            magnitud = float(magnitud_str)
+            fecha = dato[0]
+            hora = dato[1]
 
-# Función para contar sismos por siglo
-def sismos_por_siglo(datos_sismos):
-    siglos = Counter()
-    for sismo in datos_sismos:
-        if sismo[0] not in ['-', '']:
-            siglo = (int(sismo[0].split('-')[2]) - 1) // 100 + 1
-            siglos[siglo] += 1
-    return siglos
+            if magnitud > mayor_magnitud:
+                mayor_magnitud = magnitud
+                fecha_hora_mayor = f"Fecha: {fecha} y hora: {hora}"
 
-# Función para graficar sismos por siglo en 2D
+    return fecha_hora_mayor
+
+def contar_sismos_magnitud(datos, magnitud_min, magnitud_max=None):
+    contador_sismos = 0
+
+    for dato in datos:
+        magnitud_str = dato[4]
+        if magnitud_str != '-':
+            magnitud = float(magnitud_str)
+
+            if magnitud_max is None:
+                if magnitud >= magnitud_min:
+                    contador_sismos += 1
+            else:
+                if magnitud >= magnitud_min and magnitud < magnitud_max:
+                    contador_sismos += 1
+
+    return contador_sismos
+
+def contar_sismos_por_siglo(datos):
+    contador_sismos_siglo = {16: 0, 17: 0, 18: 0, 19: 0, 20: 0, 21: 0}
+
+    for dato in datos:
+        anio = int(dato[0].split('-')[2])
+        siglo = (anio // 100) + 1
+
+        if siglo in contador_sismos_siglo:
+            contador_sismos_siglo[siglo] += 1
+
+    return contador_sismos_siglo
+
 def graficar_sismos_por_siglo(siglos):
     siglos_ordenados = sorted(siglos.items())
     siglos = [f'Siglo {siglo}' for siglo, _ in siglos_ordenados]
     conteos = [conteo for _, conteo in siglos_ordenados]
+
+    
     
     plt.figure(figsize=(10, 6))
     plt.bar(siglos, conteos, color='skyblue')
@@ -42,29 +70,39 @@ def graficar_sismos_por_siglo(siglos):
     plt.tight_layout()
     plt.show()
 
-# Función para graficar sismos en 3D con fondo de imagen
 def graficar_sismos_3d(siglos):
     fig = plt.figure(figsize=(12, 8))
-    
-    # Cargar y establecer la imagen de fondo
     img = plt.imread('C:/desarrollo/terremotoschilenos_stats/fondo.png')
     fig.figimage(img, resize=True, alpha=0.5, zorder=1)
-
-    # Crear los ejes 3D sobre la imagen
     ax = fig.add_subplot(111, projection='3d', zorder=2)
+    
+    #manejo errores
+    #error = error(error01)
+
+
+
+    fig = plt.figure(figsize=(12, 8))
+    ax = fig.add_subplot(111, projection='3d')
 
     siglos_ordenados = sorted(siglos.items())
-    x = np.arange(len(siglos_ordenados))
-    y = np.zeros(len(siglos_ordenados))
-    z = np.zeros(len(siglos_ordenados))
-    dx = np.ones(len(siglos_ordenados)) * 0.5
-    dy = [float(magnitud) for _, magnitud in siglos_ordenados]
-    dz = [conteo for _, conteo in siglos_ordenados]
+    siglos = [siglo for siglo, _ in siglos_ordenados]
+    magnitudes = [float(magnitud) for _, magnitud in siglos_ordenados]
+    conteos = [conteo for _, conteo in siglos_ordenados]
 
-    ax.bar3d(x, y, z, dx, dy, dz, alpha=0.6)
+    # Coordenadas x, y, y z de las barras
+    x = [i for i in range(len(siglos))]
+    y = magnitudes
+    z = np.zeros_like(x)  # Posición en el eje z (todos en el mismo plano)
 
+    # Dimensiones de las barras
+    dx = dy = 0.8
+    dz = conteos
+
+    ax.bar3d(x, y, z, dx, dy, dz, shade=True)
+
+    # Ajustar etiquetas del eje x para reflejar los siglos
     ax.set_xticks(x)
-    ax.set_xticklabels([f'Siglo {siglo}' for siglo, _ in siglos_ordenados])
+    ax.set_xticklabels(siglos)
 
     ax.set_xlabel('Siglo')
     ax.set_ylabel('Magnitud del Sismo')
@@ -73,9 +111,36 @@ def graficar_sismos_3d(siglos):
 
     plt.show()
 
-# Función para calcular estadísticas de los datos de sismos
-def calcular_estadisticas(datos_sismos):
-    fecha_hora_mayor_sismo = sismo_mayor_magnitud(datos_sismos)
-    sismos_7_8 = contar_sismos_rango_magnitud(datos_sismos, 7.0, 8.0)
-    sismos_8_9 = contar_sismos_rango_magnitud(datos_sismos, 8.0, 9.0)
-    sismos_mayor_9 = contar_sismos_rango
+
+if __name__ == '__main__':
+
+
+
+
+    archivo_sismos = 'C:/desarrollo/terremotoschilenos_stats/sismos.txt'
+
+    datos_sismos = leer_datos_sismos(archivo_sismos)
+    #if datos_sismos is None:
+    #return error01
+
+
+    magnitud_min_1 = 7.0
+    magnitud_max_1 = 8.0
+    cantidad_sismos_1 = contar_sismos_magnitud(datos_sismos, magnitud_min_1, magnitud_max_1)
+
+    magnitud_min_2 = 8.0
+    magnitud_max_2 = 9.0
+    cantidad_sismos_2 = contar_sismos_magnitud(datos_sismos, magnitud_min_2, magnitud_max_2)
+
+    magnitud_min_3 = 9.0
+    cantidad_sismos_3 = contar_sismos_magnitud(datos_sismos, magnitud_min_3)
+
+    contador_sismos_siglo = contar_sismos_por_siglo(datos_sismos)
+
+    fecha_hora_mayor_sismo = encontrar_mayor_sismo(datos_sismos)
+    print("La", fecha_hora_mayor_sismo, "del mayor sismo registrado.")
+    print(f"Cantidad de sismos >= {magnitud_min_1} y < {magnitud_max_1}: {cantidad_sismos_1}")
+    print(f"Cantidad de sismos >= {magnitud_min_2} y < {magnitud_max_2}: {cantidad_sismos_2}")
+    print(f"Cantidad de sismos >= {magnitud_min_3}: {cantidad_sismos_3}")
+    for siglo, cantidad in contador_sismos_siglo.items():
+        print(f"Cantidad de sismos siglo {siglo}: {cantidad}")
